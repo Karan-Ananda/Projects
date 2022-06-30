@@ -1,0 +1,136 @@
+---
+title: "Real Estate"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+1. Boxplot to check the trend for house price across all transaction dates.
+
+
+```{r}
+real = read.csv('Real estate.csv',sep = ',', header = TRUE)
+real
+summary(real)
+boxplot(data = real, real$Y.house.price.of.unit.area~real$X1.transaction.date)
+
+```
+
+2. Running intial LM model:
+- Based on the p-value (alpha = 0.05), No and Longitude are not strong predictors.
+```{r}
+r_model1 = lm(real$Y.house.price.of.unit.area~., data = real)
+summary(r_model1)
+
+
+```
+
+3. Creating another LM model, with reduced predictors.
+-- All the predictors have a p-value < 0.05.
+```{r}
+r_model2 = lm(Y.house.price.of.unit.area~X1.transaction.date+ X2.house.age+X3.distance.to.the.nearest.MRT.station+ X4.number.of.convenience.stores +X5.latitude, data = real)
+
+summary(r_model2)
+
+```
+
+4. Residual analysis to check the goodness of fit for model2:
+
+- Linearity Assumption - It shows departure from the assumption, as some patterns can be observed.
+- Constant/Independent - It shows departure as the residuals variability increases with increase in fitted values.
+- Normality - It shows departure both in qqplot and Histogram.
+
+Based on the above analysis, I will perform boxcox transformation.
+```{r}
+r_resid = rstandard(r_model2)
+
+for (i in 2:6 ){
+  
+print(ggplot(data = real, aes(x = real[,i], y = r_resid )) +
+ xlab(colnames(real)[i])+
+  geom_point(color = 'red', alpha = I(0.9))+
+    geom_smooth(method = 'lm',se = F, color = 'black'))
+
+}
+
+ggplot(data = real, aes(x = fitted(r_model2), y = r_resid))+
+  geom_point()+
+  geom_smooth(method = 'lm', se = F, color = 'black')
+
+qqPlot(r_resid)
+hist(r_resid)
+
+```
+5. Since the optimum lambda value is 0, I will perform log transformation on the response variable and run a new lm model.
+```{r}
+rb_cox = boxcox(r_model2)
+lam = rb_cox$x[which.max(rb_cox$y)]
+optimum_lam = round(lam/0.5)*0.5
+optimum_lam
+```
+6. Transformed Model:
+
+```{r}
+r_model3 = lm(log(Y.house.price.of.unit.area)~X1.transaction.date+ X2.house.age+X3.distance.to.the.nearest.MRT.station+ X4.number.of.convenience.stores +X5.latitude, data = real)
+
+summary(r_model3)
+confint(r_model3)
+cor(real)
+
+```
+7. Using Model 3 to make predictions
+```{r}
+r_new_data = data.frame(X1.transaction.date = c(2020.917,2021.111), X2.house.age = c(1.0,5.0), X3.distance.to.the.nearest.MRT.station = c(10.0, 800),X4.number.of.convenience.stores = c(6, 20), X5.latitude = c(25, 29), X6.longitude = c(120, 100))
+r_new_data
+prediction1 = predict(r_model3, r_new_data, interval = 'prediction', level = 0.95)
+prediction1
+```
+
+```{r}
+real
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
+
+
+
+
+
+
+
+
+
+
